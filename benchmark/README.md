@@ -1,4 +1,4 @@
-# Current best benchmark result with other SOA algotrithms
+# Current best benchmark result with other SOTA algotrithms
 
 For example:
 
