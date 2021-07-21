@@ -7,6 +7,8 @@ billy.lyons@ed.ac.uk
 Adapted from Matthew Alger: https://github.com/MatthewJA/Inverse-Reinforcement-Learning
 """
 
+from curses.ascii import NUL
+from re import S
 import numpy as np
 from itertools import product
 
@@ -15,24 +17,26 @@ class GridWorld(object):
 	Gridworld environment
 	"""
 
-	def __init__(self, full_size, p_slip, r_dif):
+	def __init__(self, size, p_slip, terminals = [20, 24], initial_rewards = None):
 		"""
 		input:
 			size: grid size of a side, envs are square, resulting NxN
 			terminals: list of terminating states
 			rewards: array of rewards in the state space
-			p_slip: traditionally "wind", change of slipping during transition
+			p_slip: traditionally "wind", change of slipping during transition (MDP Uncertainty)
 		"""
 		self.actions = [(1,0), (-1,0), (0, 1), (0, -1)]#, (0, 0)]
 		self.n_actions = len(self.actions)
-		self.n_states = full_size**2
-		self.full_size = full_size
+		self.n_states = size**2
+		self.full_size = size
 		self.p_slip = p_slip
-		self.r_dif = r_dif
-		self.terminals = [20, 24]
-
-		self.min_ = self.n_states - self.full_size #int(self.offset)
-		self.max_ = self.n_states - 1 #int((self.offset+self.spawn_size))
+		self.initial_rewards = initial_rewards
+		self.terminals = terminals     #[20, 24]
+		
+		
+		self.offset = 0               # offset means where the robot is initially spawn at (offset to 0 state)
+		self.min_ = int(self.offset)  # self.n_states - self.full_size #int(self.offset)
+		self.max_ = self.n_states - 1 # int((self.offset+self.spawn_size))
 
 		self.features = state_features(self)
 
@@ -129,11 +133,17 @@ class GridWorld(object):
 			action `a`.
 		"""
 		rewards = np.zeros((self.n_states))
-		rewards[self.min_] = 1.0 - self.r_dif
-		rewards[self.max_] = 1.0
+		#rewards[self.min_] = 1.0 - self.r_dif   #rewards[self.max_] = 1.0
+
+		#See if the initial reward has been manually designed as input
+		if self.initial_rewards is None:                 # if not defined randomly initialize reward
+			rewards = np.random.random((self.n_states))  # random floats in [0.0, 1.0), no negative reward
+		else:
+			rewards = self.initial_rewards
+		
 		return rewards
 
-	def reward(self, state):
+	def get_reward(self, state):
 		"""
 		Reward collection function
 		Args:
@@ -150,9 +160,12 @@ class GridWorld(object):
 			state: current state of the agent
 		Returns:
 			boolean: returns True or False depending on if this is a terminating state
-				terminating states are where the task reward > 1 (not reflexive reward)
+				?? terminating states are where the task reward > 1 (not reflexive reward)
 		"""
-		if self.rewards[state] > 0:
+		# if self.rewards[state] > 0:   return True
+		# else:  return False
+
+		if state in self.terminals:
 			return True
 		else:
 			return False
@@ -173,3 +186,18 @@ def state_features(world):
 	# Returns a feature matrix where each state is an individual feature
 	# Identity matrix the size of the state space
 	return np.identity(world.n_states)
+
+
+
+# test Gridworld env
+if __name__ == "__main__":
+	env = GridWorld(3, 0, initial_rewards=[0,0,0,1,0,0,0,0,0])
+	print(env.rewards)  # random (or not) initial rewards
+    
+	a = 3   # test action
+	print(env.movement(0, a))
+	# NOTE: action <-> (right, left, up, down) // Coordinate system <--> (x(right/left), y(up/down))
+	# self.actions = [(1,0), (-1,0), (0, 1), (0, -1)]
+	print(env.state_to_coordinate(env.movement(0, a))) # Turn to coordinate system
+
+	
