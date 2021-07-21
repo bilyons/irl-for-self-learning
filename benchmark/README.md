@@ -1,11 +1,16 @@
 # Current best benchmark result with other SOTA algotrithms
 
-For example:
+![SOTA1](IRL%20Classification/Slide1.png)
+![SOTA2](IRL%20Classification/Slide2.png)
+![SOTA3](IRL%20Classification/Slide3.png)
+![SOTA4](IRL%20Classification/Slide4.png)
+![SOTA5](IRL%20Classification/Slide5.png)
 
-MaxEnt 
-DIRL
 
-AIRL
+
+For example: MaxEnt, DIRL, AIRL
+
+In Details:
 
 Multi-goal/Multi-task
 Bayesian IRL
