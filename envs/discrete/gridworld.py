@@ -7,8 +7,6 @@ billy.lyons@ed.ac.uk
 Adapted from Matthew Alger: https://github.com/MatthewJA/Inverse-Reinforcement-Learning
 """
 
-from curses.ascii import NUL
-from re import S
 import numpy as np
 from itertools import product
 
