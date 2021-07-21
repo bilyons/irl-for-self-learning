@@ -1,0 +1,3 @@
+[submodule "thirdparty/infotheory"]
+	path = thirdparty/infotheory
+	url = https://github.com/madvn/infotheory.git
