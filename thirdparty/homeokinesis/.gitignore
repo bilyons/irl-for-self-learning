@@ -1,0 +1,5 @@
+*~
+sphero_res_learner_1D/*.npz
+sphero_res_learner_1D/*.bin
+sphero_res_learner_2D/*.npz
+sphero_res_learner_2D/*.bin
