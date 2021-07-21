@@ -100,3 +100,15 @@ Online Observer-based
 Noisy observations
 
 Resolving Unidentifiability
+
+
+Learning a Prior over Intent via Meta-Inverse Reinforcement Learning
+Reinforced Imitation: Sample Efficient Deep Reinforcement Learning for Map-less Navigation by Leveraging Prior Demonstrations
+
+Cultual imitation/evolvability memo mimicing
+
+Pretraining (Prior)
+
+REWARD-FREE (REPRESENTATIONAL) RL
+
+Training parsers by inverse reinforcement learning
