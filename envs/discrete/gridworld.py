@@ -23,7 +23,8 @@ class GridWorld(object):
 			rewards: array of rewards in the state space
 			p_slip: traditionally "wind", change of slipping during transition (MDP Uncertainty)
 		"""
-		self.actions = [(1,0), (-1,0), (0, 1), (0, -1)]#, (0, 0)]
+		self.actions = [(1, 0), (0, 1), (-1, 0), (0, -1)]   # Right, Up, Left, Down
+		# [(1,0), (-1,0), (0, 1), (0, -1)]#, (0, 0)]
 		self.n_actions = len(self.actions)
 		self.n_states = size**2
 		self.full_size = size
@@ -59,19 +60,23 @@ class GridWorld(object):
 		Builds the internal probability transition table.
 		Returns:
 			The probability transition table of the form
-				[state_from, state_to, action]
+				NOTE: MAJOR CHANGE: [state_from, action,  state_to]
 			containing all transition probabilities. The individual
 			transition probabilities are defined by `self._transition_prob'.
 		"""
-		table = np.zeros(shape=(self.n_states, self.n_states, self.n_actions))
+		# table = np.zeros(shape=(self.n_states, self.n_states, self.n_actions))
+		table = np.zeros(shape=(self.n_states, self.n_actions, self.n_states))
 
-		s1, s2, a = range(self.n_states), range(self.n_states), range(self.n_actions)
-		for s_from, s_to, a in product(s1, s2, a):
-			table[s_from, s_to, a] = self._transition_prob(s_from, s_to, a)
+		# s1, s2, a = range(self.n_states), range(self.n_states), range(self.n_actions)
+		s1, a, s2 = range(self.n_states), range(self.n_actions), range(self.n_states)
+		# for s_from, s_to, a in product(s1, s2, a):
+		# 	table[s_from, s_to, a] = self._transition_prob(s_from, s_to, a)
+		for s_from,  a, s_to in product(s1, a, s2):
+			table[s_from, a, s_to] = self._transition_prob(s_from, a, s_to)
 
 		return table
 
-	def _transition_prob(self, s_from, s_to, a):
+	def _transition_prob(self, s_from, a, s_to):
 		"""
 		Compute the transition probability for a single transition.
 		Args:
@@ -192,7 +197,7 @@ if __name__ == "__main__":
 	env = GridWorld(3, 0, initial_rewards=[0,0,0,1,0,0,0,0,0])
 	print(env.rewards)  # random (or not) initial rewards
     
-	a = 3   # test action
+	a = 0   # test action
 	print(env.movement(0, a))
 	# NOTE: action <-> (right, left, up, down) // Coordinate system <--> (x(right/left), y(up/down))
 	# self.actions = [(1,0), (-1,0), (0, 1), (0, -1)]

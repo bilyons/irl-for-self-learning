@@ -7,10 +7,24 @@ billy.lyons@ed.ac.uk
 Adapted from Matthew Alger: https://github.com/MatthewJA/Inverse-Reinforcement-Learning
 """
 
+from gettext import translation
 from itertools import product
 import time
 import numpy as np
-import value_iteration as V
+# import value_iteration as V
+
+
+def softmax(x1, x2):
+    """
+    Soft-maximum calculation, from algorithm 9.2 in Ziebart's PhD thesis.
+    x1: float.
+    x2: float.
+    -> softmax(x1, x2)
+    """
+
+    max_x = max(x1, x2)
+    min_x = min(x1, x2)
+    return max_x + np.log(1 + np.exp(min_x - max_x))
 
 def normalize(vals):
   """
@@ -39,20 +53,26 @@ def compute_state_visitation_frequency(world, gamma, trajectories, policy):
 		freq: Nx1 vector of state visitation frequencies
 	"""
 
-	n_states, _, n_actions =  world.transition_prob.shape
+	# n_states, _, n_actions =  world.transition_prob.shape
+	n_states, n_actions, _ =  world.transition_prob.shape
+	
 
-	T = len(trajectories[0].transitions())
+	#NOTE:T is the trajectory length.
+
+	T = len(trajectories[0])   # .transitions())
 	mu = np.zeros((n_states, T))
 	for traj in trajectories:
-		init = traj.transitions()[0][0]
+		init = traj[0][0]      # Initial state for every single trajectory!    #.transitions()[0][0]
 		mu[init, 0] +=1.0
 	mu[:,0] = mu[:,0] / len(trajectories)
+
+	# print(mu)
 
 	d = mu.copy()
 	# Test
 	# start = time.time()
 	for t in range(T-1):
-		tmp = np.array([np.multiply(policy[:,a], world.transition_prob[:,:,a]) for a in range(n_actions)]).sum(axis=0)
+		tmp = np.array([np.multiply(policy[:,a], world.transition_prob[:,a,:]) for a in range(n_actions)]).sum(axis=0)
 		d[:,t+1]= np.dot(d[:,t],tmp)
 	# print(d.sum(axis=1))
 	# end = time.time()
@@ -61,9 +81,13 @@ def compute_state_visitation_frequency(world, gamma, trajectories, policy):
 	# start = time.time()
 	for s in range(n_states):
 		for t in range(T-1):
-			mu[s, t+1] = sum([sum([mu[pre_s, t]*world.transition_prob[pre_s, s, a]*policy[pre_s, a] for a in range(n_actions)]) for pre_s in range(n_states)])
-	print("P", sum(mu))
-	p = np.sum(mu, 1)
+			mu[s, t+1] = sum([sum([mu[pre_s, t]*world.transition_prob[pre_s, a, s]*policy[pre_s, a] for a in range(n_actions)]) for pre_s in range(n_states)])
+	
+	############ ?? #############
+	# print("P", sum(mu))
+	# p = np.sum(mu, 1)
+	
+	
 	# end = time.time()
 	# old = end-start
 	# print("Old: ", old)
@@ -82,8 +106,12 @@ def compute_state_visitation_frequency(world, gamma, trajectories, policy):
 	# exit()
 	# print(d.sum(axis=1))
 	# exit()
-	print(sum(d))
-	exit()
+
+
+	# print(sum(d))
+	# exit()
+
+	# print(d.sum(axis=1))
 	return d.sum(axis=1)
 
 def irl(world, gamma, trajectories, epochs, learning_rate):
@@ -107,6 +135,7 @@ def irl(world, gamma, trajectories, epochs, learning_rate):
 	"""
 	features = world.features
 	p_transition = world.transition_prob
+	# print(p_transition)
 	n_states, _, = features.shape
 	# Initialise weights
 	alpha = np.random.uniform(size=(n_states,))
@@ -128,7 +157,7 @@ def irl(world, gamma, trajectories, epochs, learning_rate):
 
 		# start = time.time()
 		# Compute policy
-		_, policy = V.value_iteration(world, p_transition, rewards, gamma)
+		policy = find_policy(world.n_states, world.n_actions, p_transition, rewards, gamma)
 		# print("POLICY", policy)
 		# time.sleep(0.1)
 		# end= time.time()
@@ -136,7 +165,8 @@ def irl(world, gamma, trajectories, epochs, learning_rate):
 		# exit()
 		# Compute state visitation frequency
 		esvf = compute_state_visitation_frequency(world, gamma, trajectories, policy)
-		print(esvf.reshape((11,11)))
+		# print(esvf.reshape((11,11)))
+		
 		# print(feature_expectations)
 		# print("ESVF", esvf)
 		# Compute gradients
@@ -149,7 +179,9 @@ def irl(world, gamma, trajectories, epochs, learning_rate):
 		delta = np.max(np.abs(alpha - a_old))
 		# print(alpha)
 		# print(a_old)
-		print("DELTA", delta)
+		
+		
+		# print("DELTA", delta)
 
 	rewards = np.dot(features, alpha)
 
@@ -161,13 +193,13 @@ def find_feature_expectations(world, trajectories):
 	fe = np.zeros(n_states)
 
 	for t in trajectories:
-		for s in t.states():
+		for s, a in t:  #.states():
 			fe += world.features[s,:]
 	return fe/len(trajectories)
 
 
-def find_policy(n_states, r, n_actions, discount,
-						   transition_probability):
+def find_policy(n_states, n_actions,transition_probability,
+                       r, discount):
 	"""
 	Find a policy with linear value iteration. Based on the code accompanying
 	the Levine et al. GPIRL paper and on Ziebart's PhD thesis (algorithm 9.1).
