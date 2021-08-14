@@ -5,8 +5,6 @@ from irl.standard.irl_set_traj_length import *
 import envs.discrete.originalGridWorld.gridworld as original
 import matplotlib.pyplot as plt
 
-import utils.img.img_utils as img_utils
-
 
 def main():
     # Generate samples from original script
@@ -48,26 +46,15 @@ def main():
 
     # Plot/ Visualize
     ground_r = np.array([gw.reward(s) for s in range(gw.n_states)])
-    # plt.subplot(1, 2, 1)
-    # plt.pcolor(ground_r.reshape((grid_size, grid_size)))
-    # plt.colorbar()
-    # plt.title("Groundtruth reward")
-    # plt.subplot(1, 2, 2)
-    # plt.pcolor(rewards.reshape((grid_size, grid_size)))
-    # plt.colorbar()
-    # plt.title("Recovered reward")
-    # plt.show()
-
-     # plots
-    plt.figure(figsize=(10,4))
     plt.subplot(1, 2, 1)
-    img_utils.heatmap2d(np.reshape(ground_r, (grid_size, grid_size)), 'Ground Truth Reward', block=False)
+    plt.pcolor(ground_r.reshape((grid_size, grid_size)))
+    plt.colorbar()
+    plt.title("Groundtruth reward")
     plt.subplot(1, 2, 2)
-    img_utils.heatmap2d(np.reshape(rewards, (grid_size, grid_size)), 'Recovered reward Map', block=False)
-    
-    # plt.savefig('reward.png')
+    plt.pcolor(rewards.reshape((grid_size, grid_size)))
+    plt.colorbar()
+    plt.title("Recovered reward")
     plt.show()
-    
 
 
 
