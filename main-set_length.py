@@ -1,15 +1,11 @@
 
 from mimetypes import init
 from envs.discrete.gridworld import GridWorld
-# from irl.standard.irl_set_traj_length import *
-from irl.deep.deep_maxent_irl import *
+from irl.standard.irl_set_traj_length import *
 import envs.discrete.originalGridWorld.gridworld as original
 import matplotlib.pyplot as plt
 
 import utils.img.img_utils as img_utils
-
-# import torch
-# torch.autograd.set_detect_anomaly(True)
 
 
 def main():
@@ -45,10 +41,8 @@ def main():
     print("number_initial_states", env.n_states)
     # 
     # trajectory should be (T,L,2)--> (sample_number, trajectory_length, state_sequence, action_sequence)
-    
 
-
-    rewards = deep_maxent_irl(env, discount, trajs, epochs, learning_rate)
+    rewards = irl(env, discount, trajs, epochs, learning_rate)
     print("final rewards is: ", rewards)
 
 
