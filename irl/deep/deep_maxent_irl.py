@@ -11,8 +11,8 @@ Billy.Lyons@ed.ac.uk, X.Zhao-44@sms.ed.ac.uk
 
 from itertools import product
 
-# import numpy as np
-# import numpy.random as rn
+import numpy as np
+import numpy.random as rn
 import pandas as pd
 
 import torch
