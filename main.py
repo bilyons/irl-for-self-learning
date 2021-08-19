@@ -71,6 +71,7 @@ def main():
     plt.subplot(1, 2, 2)
     img_utils.heatmap2d(np.reshape(rewards, (grid_size, grid_size)), 'Recovered reward Map', block=False)
     
+    # plt.savefig('reward-deep-19Aug.png')
     # plt.savefig('reward.png')
     plt.show()
     

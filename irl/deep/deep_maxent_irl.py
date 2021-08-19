@@ -128,8 +128,8 @@ def value_iteration(P_a, rewards, gamma, error=0.01, deterministic=True):
 	N_STATES, _, N_ACTIONS = P_a.size()     
 
 	values = torch.zeros((N_STATES,))
-	print(values.shape)
-	print(rewards.shape)
+	# print(values.shape)
+	# print(rewards.shape)
 	# print("NUM: ", N_STATES, N_ACTIONS)
 
 	# estimate values
@@ -337,7 +337,7 @@ def deep_maxent_irl(env, gamma, trajs, n_iters, lr):
 		rewards = nn_r.forward(feat_map)
 
 		# print(torch.ones((N_STATES,)), torch.ones((N_STATES,)).size())
-		print(rewards)
+		print("rewards: ", rewards)
 		
 		# compute policy 
 		_, policy = value_iteration(P_a, rewards, gamma, error=0.01, deterministic=True)
