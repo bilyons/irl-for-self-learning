@@ -62,14 +62,14 @@ We will begin by assuming a set length of the trajectory
 # Functions for everyone ###############################################################
 # From previous work
 
-# def find_feature_expectations(world, trajectories):
-# 	n_states, n_features = world.features.shape
-# 	fe = np.zeros(n_states)
+def find_feature_expectations(feature_matrix, trajectories):
+	n_states, n_features = feature_matrix.shape
+	fe = torch.zeros(n_features)
 
-# 	for t in trajectories:
-# 		for s, a in t:  #.states():
-# 			fe += world.features[s,:]
-# 	return fe/len(trajectories)
+	for t in trajectories:            #trajectories shape--> (T,L,2)
+		for step in t:  #.states():
+			fe += feature_matrix[step[0],:]
+	return fe/len(trajectories)
 
 
 def inital_probabilities(world, trajectories):
@@ -96,15 +96,16 @@ def demo_svf(trajs, n_states):
 
 class DeepMEIRL(nn.Module):
 
-	def __init__(self, feature_space, reward_space, lr=0.01,  hl1=3, hl2=3):
+	def __init__(self, feature_space, hidden_space, lr=0.01):
 
 		super(DeepMEIRL, self).__init__()
 
 		self.feature_space = feature_space
-		self.reward_space = reward_space
-		self.fc1 = nn.Linear(self.feature_space, 3)
-		self.fc2 = nn.Linear(3, 3)
-		self.fc3 = nn.Linear(3, self.reward_space)
+		# self.reward_space = reward_space
+		self.hidden_space = hidden_space
+		self.fc1 = nn.Linear(self.feature_space, self.hidden_space)     # HIDDEN_SPACE = 64
+		self.fc2 = nn.Linear(self.hidden_space, self.hidden_space)
+		self.fc3 = nn.Linear(self.hidden_space, 1)
 		# Remember to add in convolutions later maybe Billy? if relevant
 		
 		
@@ -114,9 +115,13 @@ class DeepMEIRL(nn.Module):
 		self.optimiser = RMSprop(params=self.params, lr=lr, alpha=optim_alpha, eps=optim_eps)
 
 	def forward(self, x):
+
 		output = F.relu(self.fc1(x))
+		# print("============Network======out1: ", output)
 		output = F.relu(self.fc2(output))
-		output = F.relu(self.fc3(output))
+		# print("============Network======out2: ", output)
+		output = self.fc3(output)  # Notice: here only has 1 output, you cannot do RELU anymore!!
+		# print("============Network======out3: ", output)
 		return output # Probably need to bring the normalizing function over to here
 
 
@@ -286,10 +291,23 @@ def find_expected_svf(n_states, r, n_actions, discount,
 	return expected_svf.sum(axis=1)
 
 
-
+def compute_feature_matrix(n_states):
+    return torch.eye(n_states)
 
 
 def deep_maxent_irl(env, gamma, trajs, n_iters, lr):
+
+	P_a = torch.tensor(env.transition_prob, dtype = torch.float32)
+
+	N_STATES,N_ACTIONS, _  = P_a.shape
+	
+	# feature_matrix = compute_feature_matrix(N_STATES)
+	# feature_matrix = torch.tensor(feature_matrix, dtype = torch.float32, requires_grad = True)
+	# print("feature_matrix: ", feature_matrix)
+	feature_matrix = torch.eye(N_STATES)
+
+	# print(trajs.shape)     # (20, 15, 2)
+	
 	"""
 	feat_map    NxD matrix - the features for each state
 	P_a         NxNxN_ACTIONS matrix - P_a[s0, s1, a] is the transition prob
@@ -301,15 +319,15 @@ def deep_maxent_irl(env, gamma, trajs, n_iters, lr):
 	OUTPUT: rewards     Nx1 vector - recoverred state rewards
 	
 	"""
+
 	
-	P_a = torch.tensor(env.transition_prob, dtype = torch.float32)
-	N_STATES,N_ACTIONS, _  = P_a.shape
+	
 	# N_FEATURES = 2
 	# feat_map = torch.tensor(torch.ones(N_STATES, N_FEATURES))
 	# feat_map = torch.tensor(env.features)
 	# feat_map = torch.ones(env.transition_prob.shape[0])
 
-	feat_map = torch.ones((N_STATES,))
+	# feat_map = torch.ones((N_STATES,))
 
 	P_a = torch.tensor(env.transition_prob, dtype = torch.float32)
 
@@ -317,15 +335,21 @@ def deep_maxent_irl(env, gamma, trajs, n_iters, lr):
 
 	N_STATES,N_ACTIONS, _ = P_a.shape
 
-	# N_STATES1, N_FEATURES = feat_map.shape
-	# assert(N_STATES1==N_STATES)
-	N_FEATURES = feat_map.shape[0]
+	N_STATES1, N_FEATURES = feature_matrix.shape
+	assert(N_STATES1==N_STATES)
+	feature_exp = find_feature_expectations(feature_matrix, trajs)
+
+	# N_FEATURES = feat_map.shape[0]
 
 	# init nn model
-	nn_r = DeepMEIRL(N_FEATURES, N_STATES)
+	N_HIDDEN = 64
+	nn_r = DeepMEIRL(N_FEATURES, N_HIDDEN)
+	# network output is of dimension (N_STATES, 1)
+	
 
 	# find state visitation frequencies using demonstrations
-	mu_D = demo_svf(trajs, N_STATES)
+	# mu_D = demo_svf(trajs, N_STATES)
+	#!!! Noitice: not using demo_svf here, but instead use feature_exp in deep IRL
 
 	# training 
 	for iteration in range(n_iters):
@@ -334,10 +358,10 @@ def deep_maxent_irl(env, gamma, trajs, n_iters, lr):
 		
 		# compute the reward matrix
 # """feat_map[0].flatten()"""
-		rewards = nn_r.forward(feat_map)
+		rewards = nn_r.forward(feature_matrix).squeeze()
 
 		# print(torch.ones((N_STATES,)), torch.ones((N_STATES,)).size())
-		print("rewards: ", rewards)
+		print("rewards: ", rewards.shape, rewards)
 		
 		# compute policy 
 		_, policy = value_iteration(P_a, rewards, gamma, error=0.01, deterministic=True)
@@ -345,7 +369,7 @@ def deep_maxent_irl(env, gamma, trajs, n_iters, lr):
 		# compute expected svf
 		# mu_exp = compute_state_visition_freq(P_a, gamma, trajs, policy, deterministic=True)
 		# mu_exp = find_expected_svf(P_a, gamma, trajs, policy, deterministic=True)
-		mu_exp = find_expected_svf(N_STATES, rewards, N_ACTIONS, gamma,
+		exp_svf = find_expected_svf(N_STATES, rewards, N_ACTIONS, gamma,
 					  P_a, trajs)
 		
 		# compute gradients on rewards:
@@ -353,10 +377,12 @@ def deep_maxent_irl(env, gamma, trajs, n_iters, lr):
 		# apply gradients to the neural network
 		# grad_theta, l2_loss, grad_norm = nn_r.apply_grads(feat_map, grad_r)
 		# --error--
-		error = mu_D - mu_exp
+		# error = mu_D - mu_exp
+		error = feature_exp - exp_svf
 
 		# Normal L2 loss, take mean over actual data
 		loss = (error ** 2).sum() 
+		print("loss: ", loss.item())
 
 		# Optimise
 		nn_r.optimiser.zero_grad()
@@ -365,8 +391,9 @@ def deep_maxent_irl(env, gamma, trajs, n_iters, lr):
 		nn_r.optimiser.step()
 
 
-	rewards = nn_r.forward(feat_map)  #get_rewards(feat_map)
+	rewards = nn_r.forward(feature_matrix).squeeze()  #get_rewards(feat_map)
+	# rewards = torch.squeeze(rewards)
 	# return sigmoid(normalize(rewards))
 	rewards = rewards.detach().numpy()
-	return normalize(rewards)
+	return normalize(rewards)               #.reshape((N_STATES,))
 
