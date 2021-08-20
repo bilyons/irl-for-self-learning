@@ -95,6 +95,17 @@ def demo_svf(trajs, n_states):
 	return p
 
 class DeepMEIRL(nn.Module):
+	"""
+	Here, the network and loss backpropagate design is got from:
+	Network last output should be 1 element, but consider the N_STATES as batchsize and then resize the tensor:
+	https://github.com/neka-nat/inv_rl/blob/master/max_ent_deep_irl.py#L47
+	And some inspirations get from my another RL project in using self.optimiser = RMSprop()
+	# Normal L2 loss, take mean over actual data//
+	and also the loss function can be masked or padded for non-fixed trajectory length:
+	https://github.com/jerryzhao173985/Competition_3v3snakes/blob/master/pymarl/src/learners/q_learner.py#L88-L103
+	Useful for future adaptation for this code!
+
+	"""
 
 	def __init__(self, feature_space, hidden_space, lr=0.01):
 
