@@ -17,3 +17,10 @@ GridWorld(5*5)
     With 100 iterations.
 
   ![Deep Maxent IRL](reward-deepIRL-20Aug.png)
+
+
+* **Deep Maxent IRL on ObjectWorld**
+  
+    With 100 iterations.
+
+  ![Deep Maxent IRL](reward-ObjectWorld.png)

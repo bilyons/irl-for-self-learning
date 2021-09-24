@@ -12,7 +12,7 @@ from itertools import product
 
 import numpy as np
 
-from gridworld import GridWorld
+from .gridworld import GridWorld
 
 class OWObject(object):
 	"""
@@ -57,7 +57,7 @@ class ObjectWorld(GridWorld):
 			Class object of type ObjectWorld
 		"""
 
-		super().__init__(full_size, p_slip, 0.0)
+		super().__init__(full_size, p_slip)
 
 		self.actions = [(1,0), (-1,0), (0, 1), (0, -1), (0, 0)]
 		self.n_actions = len(self.actions)
@@ -95,13 +95,13 @@ class ObjectWorld(GridWorld):
 		-> Feature vector.
 		"""
 
-		sx, sy = self.int_to_point(i)
+		sx, sy = self.state_to_coordinate(i)
 
 		nearest_inner = {}  # colour: distance
 		nearest_outer = {}  # colour: distance
 
-		for y in range(self.grid_size):
-			for x in range(self.grid_size):
+		for y in range(self.full_size):
+			for x in range(self.full_size):
 				if (x, y) in self.objects:
 					dist = math.hypot((x - sx), (y - sy))
 					obj = self.objects[x, y]
@@ -124,17 +124,17 @@ class ObjectWorld(GridWorld):
 				nearest_outer[c] = 0
 
 		if discrete:
-			state = np.zeros((2*self.n_colours*self.grid_size,))
+			state = np.zeros((2*self.n_colours*self.full_size,))
 			i = 0
 			for c in range(self.n_colours):
-				for d in range(1, self.grid_size+1):
+				for d in range(1, self.full_size+1):
 					if nearest_inner[c] < d:
 						state[i] = 1
 					i += 1
 					if nearest_outer[c] < d:
 						state[i] = 1
 					i += 1
-			assert i == 2*self.n_colours*self.grid_size
+			assert i == 2*self.n_colours*self.full_size
 			assert (state >= 0).all()
 		else:
 			# Continuous features.
@@ -166,12 +166,12 @@ class ObjectWorld(GridWorld):
 		-> reward float
 		"""
 
-		x, y = self.int_to_point(state_int)
+		x, y = self.state_to_coordinate(state_int)
 
 		near_c0 = False
 		near_c1 = False
 		for (dx, dy) in product(range(-3, 4), range(-3, 4)):
-			if 0 <= x + dx < self.grid_size and 0 <= y + dy < self.grid_size:
+			if 0 <= x + dx < self.full_size and 0 <= y + dy < self.full_size:
 				if (abs(dx) + abs(dy) <= 3 and
 						(x+dx, y+dy) in self.objects and
 						self.objects[x+dx, y+dy].outer_colour == 0):

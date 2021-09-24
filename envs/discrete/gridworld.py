@@ -31,6 +31,8 @@ class GridWorld(object):
 		self.p_slip = p_slip
 		self.initial_rewards = initial_rewards
 		self.terminals = terminals     #[20, 24]
+
+		self.objects = {}
 		
 		
 		self.offset = 0               # offset means where the robot is initially spawn at (offset to 0 state)
