@@ -21,13 +21,13 @@ def main():
 	"""
 	grid_size = 10
 	wind = 0.3
-	trajectory_length = 8
-	discount = 0.9
+	trajectory_length = 3*grid_size
+	discount = 0.95
 	n_objects = 15
 	n_colours = 2
 	n_trajectories = 200
-	learning_rate = 0.01
-	epochs = 100
+	learning_rate = 0.001
+	epochs = 1000
   
 
 	ow = ObjectWorld(grid_size, n_objects, n_colours, wind, discount)
@@ -51,8 +51,9 @@ def main():
 	plt.subplot(1, 2, 2)
 	img_utils.heatmap2d(np.reshape(rewards, (grid_size, grid_size)), 'Recovered reward Map', block=False)
 	
+	plt.savefig('ObjectWorld-Adam.png')
 	# plt.savefig('reward-deep-ObjectWorld.png')
-	plt.show()
+	# plt.show()
 	
 
 
