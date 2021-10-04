@@ -45,19 +45,19 @@ class ObjectWorld(GridWorld):
 	The object world class, based on the GridWorld class
 	"""
 
-	def __init__(self, full_size, p_slip, n_objects, n_colours):
+	def __init__(self, grid_size, n_objects, n_colours, wind, discount):
 
 		"""
 		Args::
-			full_size: grid size of a side, envs are square, resulting NxN, integer
-			p_slip: traditionally "wind", change of slipping during transition, float
+			grid_size: grid size of a side, envs are square, resulting NxN, integer
+			wind: traditionally "wind", change of slipping during transition, float
 			n_objects: number of objects in the world, integer
 			n_colours: number of possible colours, integer
 		Returns:
 			Class object of type ObjectWorld
 		"""
 
-		super().__init__(full_size, p_slip)
+		super().__init__(grid_size, wind, discount)
 
 		self.actions = [(1,0), (-1,0), (0, 1), (0, -1), (0, 0)]
 		self.n_actions = len(self.actions)
@@ -74,8 +74,8 @@ class ObjectWorld(GridWorld):
 				np.random.randint(self.n_colours))
 
 			while True:
-				x = np.random.randint(self.full_size)
-				y = np.random.randint(self.full_size)
+				x = np.random.randint(self.grid_size)
+				y = np.random.randint(self.grid_size)
 
 				if (x, y) not in self.objects:
 					break
@@ -100,8 +100,8 @@ class ObjectWorld(GridWorld):
 		nearest_inner = {}  # colour: distance
 		nearest_outer = {}  # colour: distance
 
-		for y in range(self.full_size):
-			for x in range(self.full_size):
+		for y in range(self.grid_size):
+			for x in range(self.grid_size):
 				if (x, y) in self.objects:
 					dist = math.hypot((x - sx), (y - sy))
 					obj = self.objects[x, y]
@@ -124,17 +124,17 @@ class ObjectWorld(GridWorld):
 				nearest_outer[c] = 0
 
 		if discrete:
-			state = np.zeros((2*self.n_colours*self.full_size,))
+			state = np.zeros((2*self.n_colours*self.grid_size,))
 			i = 0
 			for c in range(self.n_colours):
-				for d in range(1, self.full_size+1):
+				for d in range(1, self.grid_size+1):
 					if nearest_inner[c] < d:
 						state[i] = 1
 					i += 1
 					if nearest_outer[c] < d:
 						state[i] = 1
 					i += 1
-			assert i == 2*self.n_colours*self.full_size
+			assert i == 2*self.n_colours*self.grid_size
 			assert (state >= 0).all()
 		else:
 			# Continuous features.
@@ -171,7 +171,7 @@ class ObjectWorld(GridWorld):
 		near_c0 = False
 		near_c1 = False
 		for (dx, dy) in product(range(-3, 4), range(-3, 4)):
-			if 0 <= x + dx < self.full_size and 0 <= y + dy < self.full_size:
+			if 0 <= x + dx < self.grid_size and 0 <= y + dy < self.grid_size:
 				if (abs(dx) + abs(dy) <= 3 and
 						(x+dx, y+dy) in self.objects and
 						self.objects[x+dx, y+dy].outer_colour == 0):

@@ -1,6 +1,6 @@
 
 from mimetypes import init
-from envs.discrete.gridworld import GridWorld
+from envs.discrete.gridworld_test import GridWorld
 # from irl.standard.irl_set_traj_length import *
 from irl.deep.deep_maxent_irl import *
 import envs.discrete.originalGridWorld.gridworld as original
