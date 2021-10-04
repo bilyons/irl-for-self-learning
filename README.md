@@ -19,8 +19,23 @@ GridWorld(5*5)
   ![Deep Maxent IRL](reward-deepIRL-20Aug.png)
 
 
-* **Deep Maxent IRL on ObjectWorld**
+<!-- * **Deep Maxent IRL on ObjectWorld**
   
     With 100 iterations.
 
   ![Deep Maxent IRL](reward-ObjectWorld.png)
+ -->
+
+
+* **Deep Maxent IRL on ObjectWorld**
+  
+    Trail 1 : With 100 iterations.
+
+  ![Deep Maxent IRL](ObjectWorld-Jerry.png)
+
+    Trail 2:
+  
+  ![Deep Maxent IRL](ObjectWorld-Billy.png)
+  
+    
+
