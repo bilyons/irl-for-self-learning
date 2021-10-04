@@ -10,7 +10,7 @@ Adapted from Matthew Alger: https://github.com/MatthewJA/Inverse-Reinforcement-L
 import numpy as np
 from itertools import product
 
-import numpy as np
+import math
 
 from .gridworld import GridWorld
 
@@ -37,7 +37,7 @@ class OWObject(object):
 		A string representation of the object for browsing
 		"""
 
-		return f"<Object (In: {self.inner_colour}) (Out: {self.outer_colour})>"
+		return "<Object (In: {self.inner_colour}) (Out: {self.outer_colour})>"
 
 class ObjectWorld(GridWorld):
 
@@ -95,7 +95,7 @@ class ObjectWorld(GridWorld):
 		-> Feature vector.
 		"""
 
-		sx, sy = self.state_to_coordinate(i)
+		sx, sy = self.int_to_point(i)
 
 		nearest_inner = {}  # colour: distance
 		nearest_outer = {}  # colour: distance
@@ -166,7 +166,7 @@ class ObjectWorld(GridWorld):
 		-> reward float
 		"""
 
-		x, y = self.state_to_coordinate(state_int)
+		x, y = self.int_to_point(state_int)
 
 		near_c0 = False
 		near_c1 = False

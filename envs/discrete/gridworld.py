@@ -82,11 +82,11 @@ class GridWorld(object):
 		# exit()
 		return np.array(features)
 
-	def state_to_coordinate(self, state):
+	def int_to_point(self, state):
 		# Converts a state from s in size**2 to (y,x) coordinate
 		return state % self.grid_size, state // self.grid_size
 
-	def coordinate_to_state(self, coord):
+	def point_to_int(self, coord):
 		# Converts a coordinate represented state to full index
 		return coord[1]*self.grid_size + coord[0]
 
@@ -134,8 +134,8 @@ class GridWorld(object):
 			The transition probability from `s_from` to `s_to` when taking
 			action `a`.
 		"""
-		fx, fy = self.state_to_coordinate(s_from)
-		tx, ty = self.state_to_coordinate(s_to)
+		fx, fy = self.int_to_point(s_from)
+		tx, ty = self.int_to_point(s_to)
 		ax, ay = self.actions[a]
 
 		# deterministic transition defined by action

@@ -198,6 +198,13 @@ def optimal_value(n_states, n_actions, transition_probabilities, reward,
 
 	v = torch.zeros(n_states, dtype = torch.float32)
 
+	# reward = torch.from_numpy(reward)
+	# transition_probabilities = torch.from_numpy(transition_probabilities)
+	reward = torch.tensor(reward, dtype = torch.float32)
+	transition_probabilities = torch.tensor(transition_probabilities, dtype = torch.float32)
+	
+
+
 	diff = float("inf")
 	while diff > threshold:
 		diff = 0

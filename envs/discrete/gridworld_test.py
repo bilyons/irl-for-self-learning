@@ -49,11 +49,11 @@ class GridWorld(object):
 	# Jerry, in case you see this, I think I am going to revisit these to be more efficient
 	# But they are suitable for now
 
-	def state_to_coordinate(self, state):
+	def int_to_point(self, state):
 		# Converts a state from s in size**2 to (y,x) coordinate
 		return state % self.full_size, state // self.full_size
 
-	def coordinate_to_state(self, coord):
+	def point_to_int(self, coord):
 		# Converts a coordinate represented state to full index
 		return coord[1]*self.full_size + coord[0]
 
@@ -89,8 +89,8 @@ class GridWorld(object):
 			The transition probability from `s_from` to `s_to` when taking
 			action `a`.
 		"""
-		fx, fy = self.state_to_coordinate(s_from)
-		tx, ty = self.state_to_coordinate(s_to)
+		fx, fy = self.int_to_point(s_from)
+		tx, ty = self.int_to_point(s_to)
 		ax, ay = self.actions[a]
 
 		# deterministic transition defined by action
@@ -203,6 +203,6 @@ if __name__ == "__main__":
 	print(env.movement(0, a))
 	# NOTE: action <-> (right, left, up, down) // Coordinate system <--> (x(right/left), y(up/down))
 	# self.actions = [(1,0), (-1,0), (0, 1), (0, -1)]
-	print(env.state_to_coordinate(env.movement(0, a))) # Turn to coordinate system
+	print(env.int_to_point(env.movement(0, a))) # Turn to coordinate system
 
 	

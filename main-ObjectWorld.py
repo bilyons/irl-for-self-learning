@@ -40,30 +40,18 @@ def main():
 	
 	feature_matrix = ow.feature_matrix(discrete=False)
 
-	rewards = deep_maxent_irl(env, discount, trajectories, epochs, learning_rate)
+	rewards = deep_maxent_irl(ow, discount, trajectories, epochs, learning_rate)
 	print("final rewards is: ", rewards)
 
-
-	# Plot/ Visualize
-	# plt.subplot(1, 2, 1)
-	# plt.pcolor(ground_r.reshape((grid_size, grid_size)))
-	# plt.colorbar()
-	# plt.title("Groundtruth reward")
-	# plt.subplot(1, 2, 2)
-	# plt.pcolor(rewards.reshape((grid_size, grid_size)))
-	# plt.colorbar()
-	# plt.title("Recovered reward")
-	# plt.show()
-
-	 # plots
+	
+	# plots
 	plt.figure(figsize=(10,4))
 	plt.subplot(1, 2, 1)
 	img_utils.heatmap2d(np.reshape(ground_r, (grid_size, grid_size)), 'Ground Truth Reward', block=False)
 	plt.subplot(1, 2, 2)
 	img_utils.heatmap2d(np.reshape(rewards, (grid_size, grid_size)), 'Recovered reward Map', block=False)
 	
-	# plt.savefig('reward-deep-19Aug.png')
-	# plt.savefig('reward.png')
+	# plt.savefig('reward-deep-ObjectWorld.png')
 	plt.show()
 	
 
