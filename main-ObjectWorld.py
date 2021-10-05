@@ -21,13 +21,13 @@ def main():
 	"""
 	grid_size = 10
 	wind = 0.3
-	trajectory_length = 3*grid_size
+	trajectory_length = 25
 	discount = 0.95
 	n_objects = 15
 	n_colours = 2
 	n_trajectories = 200
 	learning_rate = 0.001
-	epochs = 1000
+	epochs = 200
   
 
 	ow = ObjectWorld(grid_size, n_objects, n_colours, wind, discount)
