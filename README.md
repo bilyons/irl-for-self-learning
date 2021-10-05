@@ -51,4 +51,13 @@ GridWorld(5*5)
     ```
   
   ![Deep Maxent IRL Better](ObjectWorld-Adam.png)
+
+
+    Trail 4
+
+  ![Deep Maxent IRL 1](Figure_1.png)
+
+    Trail 5:
+  
+  ![Deep Maxent IRL 2](Figure_2.png)
   
