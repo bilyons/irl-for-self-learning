@@ -69,6 +69,32 @@ def optimal_value(n_states, n_actions, transition_probabilities, reward,
 
     return v
 
+
+def policy_eval(policy, reward, transition_probabilities, nS, nA, discount_factor=1.0, theta=0.00001):
+    """
+    Policy Evaluation. Same as optimal_value??
+    """
+    V = np.zeros(nS)
+    while True:
+        delta = 0
+        # print(policy.shape)
+        for s in range(nS):
+            v = 0
+            for a, a_prob in enumerate(policy[s]):
+                if a_prob == 0.0:
+                    continue
+                ns_prob = transition_probabilities[s, a]
+                next_v = V[np.arange(nS)]
+                r = reward[s]
+                v += np.sum(ns_prob * a_prob * (r + discount_factor * next_v))
+            delta = max(delta, np.abs(v - V[s]))
+            V[s] = v
+        # print(delta)
+        if delta < theta:
+            break
+    return np.array(V)
+
+
 def find_policy(n_states, n_actions, transition_probabilities, reward, discount,
                 threshold=1e-2, v=None, stochastic=True):
     """
@@ -109,6 +135,10 @@ def find_policy(n_states, n_actions, transition_probabilities, reward, discount,
                                      for k in range(n_states)))
     policy = np.array([_policy(s) for s in range(n_states)])
     return policy
+
+
+
+
 
 if __name__ == '__main__':
     # Quick unit test using gridworld.
