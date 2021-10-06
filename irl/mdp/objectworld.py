@@ -55,7 +55,8 @@ class Objectworld(Gridworld):
 
         super().__init__(grid_size, wind, discount)
 
-        self.actions = ((1, 0), (0, 1), (-1, 0), (0, -1), (0, 0))
+        # self.actions = ((1, 0), (0, 1), (-1, 0), (0, -1), (0, 0))
+        self.actions = [(1, 0), (0, 1), (-1, 0), (0, -1)]   # Right, Up, Left, Down; Coordinate system <--> (x(right/left), y(up/down))
         self.n_actions = len(self.actions)
         self.n_objects = n_objects
         self.n_colours = n_colours

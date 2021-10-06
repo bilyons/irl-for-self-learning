@@ -11,6 +11,9 @@ import matplotlib.pyplot as plt
 import irl.maxent as maxent
 import irl.mdp.objectworld as objectworld
 from irl.value_iteration import *
+from irl.utils import *
+
+import os
 
 def main(grid_size, discount, n_objects, n_colours, n_trajectories, epochs,
 		 learning_rate):
@@ -52,8 +55,53 @@ def main(grid_size, discount, n_objects, n_colours, n_trajectories, epochs,
 
 	stochastic_new_policy = find_policy(ow.n_states, ow.n_actions, ow.transition_probability,
 						 r, ow.discount, stochastic=True)
+	new_policy = find_policy(ow.n_states, ow.n_actions, ow.transition_probability,
+						 r, ow.discount, stochastic=False)
 	new_value = policy_eval(stochastic_new_policy, r, ow.transition_probability, ow.n_states, ow.n_actions, discount_factor=ow.discount)
 	# policy_eval(policy, reward, transition_probabilities, nS, nA, discount_factor=1.0, theta=0.00001):
+
+	# plot and save the value function values in a table
+	random_seed = np.random.randint(1,1000)
+	foldername = "results/"+ str(epochs)+"_"+str(learning_rate)+ "_r"+ str(random_seed) + "/"
+	os.mkdir(foldername)
+	fig, ax = plt.subplots()
+	ax = plot_table(ax, np.round(ground_value, decimals=3).reshape(grid_size, grid_size), 'iter = ' +'optimal')
+	fig.savefig(foldername+ "True_value.png")
+	
+	fig, ax = plt.subplots()
+	# new_value = np.arange(100)
+	ax = plot_table(ax, np.round(new_value, decimals=3).reshape(grid_size, grid_size), 'iter = ' + str(epochs))
+	fig.savefig(foldername+ "IRL_value.png")
+
+	policy_map = [0 for i in range(100)]
+	ground_policy_plot = optimal_policy_map(policy_map, ground_policy)
+	fig, ax = plt.subplots()
+	title = 'Optimal Policy Map for Groundtruth Reward Function'
+	ax = plot_table(ax, np.array(ground_policy_plot).reshape(10, 10), title)
+	fig.savefig(foldername+ "Ground_Policy_Map.png")
+
+	acc = calc_accuracy(new_policy, ground_policy, ow.n_states)
+	print("acc= "+ str(np.round(acc, decimals=2)))
+
+	policy_map = [0 for i in range(100)]
+	new_policy_plot = optimal_policy_map(policy_map, new_policy)
+	fig, ax = plt.subplots()
+	title = "Optimal Policy Map for IRL Reward Function, acc= "+ str(np.round(acc, decimals=2))
+	ax = plot_table(ax, np.array(new_policy_plot).reshape(10, 10), title)
+	fig.savefig(foldername+ "IRL_Policy_Map.png")
+
+	# policy comparison
+	fig, ax = plt.subplots()
+	title = "Optimal Policy Map Comparison for extracted Reward Function, acc= "+ str(np.round(acc, decimals=2))
+	policy_diff = []
+	for i in range(ow.n_states):
+		if ground_policy_plot[i] == new_policy_plot[i]:
+			policy_diff.append(ground_policy_plot[i])
+		else:
+			policy_diff.append(ground_policy_plot[i]+"/"+new_policy_plot[i])
+	ax = plot_table(ax, np.array(policy_diff).reshape(10, 10), title)
+	fig.savefig(foldername+ "Policy_Map_Comparison.png")
+
 
 	plt.subplot(2, 2, 1)
 	plt.pcolor(ground_r.reshape((grid_size, grid_size)))
@@ -73,8 +121,17 @@ def main(grid_size, discount, n_objects, n_colours, n_trajectories, epochs,
 	plt.colorbar()
 	plt.title("Recovered value function")
 
-	plt.show()
+	plt.savefig(foldername+ "ObjectWorld.png")
+	# plt.show()
+
+	return acc
+	
+	
 
 if __name__ == '__main__':
-	main(10, 0.95, 15, 2, 50, 500, 0.001)
+	accs = []
+	for i in range(10):
+		acc = main(10, 0.99, 15, 2, 50, 200, 0.001)
+	accs.append(acc)
+	print(accs)
 	# grid_size, discount, n_objects, n_colours, n_trajectories, epochs, learning_rate

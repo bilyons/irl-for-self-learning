@@ -20,6 +20,7 @@ from torch.optim import RMSprop
 from torch.optim import Adam
 
 import time
+from torch.utils.tensorboard import SummaryWriter
 
 
 def normalize(vals):
@@ -292,6 +293,7 @@ def deep_maxent_irl(feature_matrix, env, gamma, trajs, n_iters, lr):
  
 	feature_exp = find_feature_expectations(feature_matrix, trajs)
 
+	tb = SummaryWriter()
 	# N_FEATURES = feat_map.shape[0]
 	N_HIDDEN = 128
 	nn_r = DeepIRL(N_FEATURES, N_HIDDEN, lr=lr).to(device)   # network output is of dimension (N_STATES, 1)
@@ -322,6 +324,7 @@ def deep_maxent_irl(feature_matrix, env, gamma, trajs, n_iters, lr):
 		grad_r = feature_exp - feature_matrix_copy.T.dot(exp_svf)
 
 		print("iteration: {}".format(iteration), "grad: ", ((grad_r**2).sum()).item())
+		tb.add_scalar("loss", ((grad_r**2).sum()).item(), iteration)
 
 		# Optimise
 		nn_r.optimiser.zero_grad()
@@ -344,6 +347,7 @@ def deep_maxent_irl(feature_matrix, env, gamma, trajs, n_iters, lr):
  
 	end_time = time.time()
 	print("Total time for training on ", device, ": ", end_time-start_time)
+	tb.close()
  
 	return normalize(rewards)               #.reshape((N_STATES,))
 
