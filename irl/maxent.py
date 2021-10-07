@@ -269,6 +269,69 @@ class DeepIRL(nn.Module):
 		output = self.fc3(output)  # Notice: here only has 1 output, you cannot do RELU anymore!!
 		return output 
 
+#  With convolutional layers to better the performance and add model complexity
+class ConvIRL(nn.Module):
+	
+	def __init__(self, feature_space, hidden_space, lr=0.001):
+
+		super(ConvIRL, self).__init__()
+
+		self.feature_space = feature_space
+		# self.reward_space = reward_space
+		self.hidden_space = hidden_space
+
+		self.layer1 = nn.Sequential(
+			nn.Conv2d(1, 2, kernel_size=5, stride=1),     #---- (100-5)+1 = 96
+			nn.ReLU(),
+			nn.MaxPool2d(kernel_size=2, stride=2))        #---- (96-2)/2 +1 = 96/2 = 48
+		self.layer2 = nn.Sequential(
+			nn.Conv2d(2, 4, kernel_size=5, stride=1),     #---- 48-5+1 = 44
+			nn.ReLU(),
+			nn.MaxPool2d(kernel_size=2, stride=2))        #---- (44-2)/2 +1 = 44/2 = 22
+		self.layer3 = nn.Sequential(
+			nn.Conv2d(4, 8, kernel_size=5, stride=1),     #---- 22-5+1 = 18
+			nn.ReLU(),
+			nn.MaxPool2d(kernel_size=2, stride=2))        #---- (18-2)/2 +1 = 18/2 = 9
+		self.drop_out = nn.Dropout()
+		self.fc1 = nn.Linear(9 * 9 * 8, 500)
+		self.fc2 = nn.Linear(500, 100)
+		self.fc3 = nn.Linear(100, 1)
+
+		# self.fc1 = nn.Linear(self.feature_space, self.hidden_space)     # HIDDEN_SPACE = 64
+		# self.fc2 = nn.Linear(self.hidden_space, self.hidden_space)
+		# self.fc3 = nn.Linear(self.hidden_space, 1)
+		
+		self.params = list(self.parameters())
+		# optim_alpha = 0.99 # RMSProp alpha optim_eps = 0.00001 # RMSProp epsilon
+		# self.optimiser = RMSprop(params=self.params, lr=lr, alpha=optim_alpha, eps=optim_eps)
+		epsilon=1e-8
+		self.optimiser = Adam(params=self.params, lr=lr, betas=(0.9, 0.999), eps=epsilon)
+		
+	def forward(self, x):
+		out = x.view(1,1, x.size(0), x.size(1))
+		print(out.shape)
+		out = self.layer1(out)
+		print(out.shape)
+		out = self.layer2(out)
+		print(out.shape)
+		out = self.layer3(out)
+		print(out.shape)
+		out = out.reshape(out.size(0), -1)
+		print(out.shape)
+		out = self.drop_out(out)
+		print(out.shape)
+		out = self.fc1(out)
+		out = self.fc2(out)
+		# out = self.fc3(out)
+		print(out.shape)
+		
+		return out
+
+		# out = F.relu(self.fc1(out))
+		# out = F.relu(self.fc2(out))
+		# out = self.fc3(out)  # Notice: here only has 1 output, you cannot do RELU anymore!!
+		# return out 
+
 
 def compute_feature_matrix(n_states):
 	return torch.eye(n_states)
@@ -296,7 +359,8 @@ def deep_maxent_irl(feature_matrix, env, gamma, trajs, n_iters, lr):
 	tb = SummaryWriter()
 	# N_FEATURES = feat_map.shape[0]
 	N_HIDDEN = 128
-	nn_r = DeepIRL(N_FEATURES, N_HIDDEN, lr=lr).to(device)   # network output is of dimension (N_STATES, 1)
+	# nn_r = DeepIRL(N_FEATURES, N_HIDDEN, lr=lr).to(device)   # network output is of dimension (N_STATES, 1)
+	nn_r = ConvIRL(N_FEATURES, N_HIDDEN, lr=lr).to(device)
  
 	feature_matrix_copy = feature_matrix
 	

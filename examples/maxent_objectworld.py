@@ -130,8 +130,8 @@ def main(grid_size, discount, n_objects, n_colours, n_trajectories, epochs,
 
 if __name__ == '__main__':
 	accs = []
-	for i in range(10):
-		acc = main(10, 0.99, 15, 2, 50, 200, 0.001)
-	accs.append(acc)
+	for i in range(2):
+		acc = main(10, 0.95, 15, 2, 50, 200, 0.001)
+		accs.append(acc)
 	print(accs)
 	# grid_size, discount, n_objects, n_colours, n_trajectories, epochs, learning_rate
