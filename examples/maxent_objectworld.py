@@ -37,6 +37,10 @@ def main(grid_size, discount, n_objects, n_colours, n_trajectories, epochs,
 	ow = objectworld.Objectworld(grid_size, n_objects, n_colours, wind,
 								 discount)
 	ground_r = np.array([ow.reward(s) for s in range(ow.n_states)])
+	
+	# Put both the groundtruth reward and the IRL reward into the same scale [0,1].
+	ground_r = maxent.normalize(ground_r)
+
 	ground_policy = find_policy(ow.n_states, ow.n_actions, ow.transition_probability,
 						 ground_r, ow.discount, stochastic=False)
 
@@ -61,8 +65,11 @@ def main(grid_size, discount, n_objects, n_colours, n_trajectories, epochs,
 	# policy_eval(policy, reward, transition_probabilities, nS, nA, discount_factor=1.0, theta=0.00001):
 
 	# plot and save the value function values in a table
-	random_seed = np.random.randint(1,1000)
-	foldername = "results/"+ str(epochs)+"_"+str(learning_rate)+ "_r"+ str(random_seed) + "/"
+	random_seed = np.random.randint(1,100000)
+	acc = calc_accuracy(new_policy, ground_policy, ow.n_states)
+	print("acc= "+ str(np.round(acc, decimals=2)))
+
+	foldername = "results/"+ "traj"+ str(n_trajectories)+"_e"+ str(epochs)+ "_r"+ str(random_seed) + "_acc"+ str(np.round(acc, decimals=2)) + "/"
 	os.mkdir(foldername)
 	fig, ax = plt.subplots()
 	ax = plot_table(ax, np.round(ground_value, decimals=3).reshape(grid_size, grid_size), 'iter = ' +'optimal')
@@ -79,9 +86,6 @@ def main(grid_size, discount, n_objects, n_colours, n_trajectories, epochs,
 	title = 'Optimal Policy Map for Groundtruth Reward Function'
 	ax = plot_table(ax, np.array(ground_policy_plot).reshape(10, 10), title)
 	fig.savefig(foldername+ "Ground_Policy_Map.png")
-
-	acc = calc_accuracy(new_policy, ground_policy, ow.n_states)
-	print("acc= "+ str(np.round(acc, decimals=2)))
 
 	policy_map = [0 for i in range(100)]
 	new_policy_plot = optimal_policy_map(policy_map, new_policy)
@@ -123,6 +127,7 @@ def main(grid_size, discount, n_objects, n_colours, n_trajectories, epochs,
 
 	plt.savefig(foldername+ "ObjectWorld.png")
 	# plt.show()
+	print("results saved to folder: ", foldername)
 
 	return acc
 	
@@ -130,8 +135,21 @@ def main(grid_size, discount, n_objects, n_colours, n_trajectories, epochs,
 
 if __name__ == '__main__':
 	accs = []
-	for i in range(2):
-		acc = main(10, 0.95, 15, 2, 50, 200, 0.001)
+	
+	# for i in range(2):
+	# 	acc = main(10, 0.95, 15, 2, 32, 200, 0.1)
+	# 	accs.append(acc)
+	for i in range(1):
+		acc = main(10, 0.95, 15, 2, 64, 200, 0.01)
 		accs.append(acc)
+	# for i in range(2):
+	# 	acc = main(10, 0.95, 15, 2, 128, 200, 0.1)
+	# 	accs.append(acc)
+	# for i in range(2):
+	# 	acc = main(10, 0.95, 15, 2, 256, 200, 0.1)
+	# 	accs.append(acc)
+	# for i in range(2):
+	# 	acc = main(10, 0.95, 15, 2, 512, 200, 0.1)
+	# 	accs.append(acc)
 	print(accs)
 	# grid_size, discount, n_objects, n_colours, n_trajectories, epochs, learning_rate

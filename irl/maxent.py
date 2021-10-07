@@ -21,6 +21,7 @@ from torch.optim import Adam
 
 import time
 from torch.utils.tensorboard import SummaryWriter
+from torch.optim.lr_scheduler import StepLR
 
 
 def normalize(vals):
@@ -281,20 +282,24 @@ class ConvIRL(nn.Module):
 		self.hidden_space = hidden_space
 
 		self.layer1 = nn.Sequential(
-			nn.Conv2d(1, 2, kernel_size=5, stride=1),     #---- (100-5)+1 = 96
+			nn.Conv2d(1, 8, kernel_size=5, stride=1),     #---- (100-5)+1 = 96
 			nn.ReLU(),
 			nn.MaxPool2d(kernel_size=2, stride=2))        #---- (96-2)/2 +1 = 96/2 = 48
 		self.layer2 = nn.Sequential(
-			nn.Conv2d(2, 4, kernel_size=5, stride=1),     #---- 48-5+1 = 44
+			nn.Conv2d(8, 16, kernel_size=5, stride=1),     #---- 48-5+1 = 44
 			nn.ReLU(),
 			nn.MaxPool2d(kernel_size=2, stride=2))        #---- (44-2)/2 +1 = 44/2 = 22
 		self.layer3 = nn.Sequential(
-			nn.Conv2d(4, 8, kernel_size=5, stride=1),     #---- 22-5+1 = 18
+			nn.Conv2d(16, 32, kernel_size=5, stride=1),     #---- 22-5+1 = 18
 			nn.ReLU(),
 			nn.MaxPool2d(kernel_size=2, stride=2))        #---- (18-2)/2 +1 = 18/2 = 9
-		self.drop_out = nn.Dropout()
-		self.fc1 = nn.Linear(9 * 9 * 8, 500)
-		self.fc2 = nn.Linear(500, 100)
+		# self.drop_out = nn.Dropout()                    # In order to better fit to the groundtruth, no need to add penalization (e.g. droupout for exploration)
+		self.layer4 = nn.Sequential(
+			nn.Conv2d(32, 64, kernel_size=4, stride=1),     #---- 9-4+1 = 6
+			nn.ReLU(),
+			nn.MaxPool2d(kernel_size=2, stride=2))        #---- (6-2)/2 +1 = 6/2 = 3
+		self.fc1 = nn.Linear(3 * 3 * 64, 256)
+		self.fc2 = nn.Linear(256, 100)
 		self.fc3 = nn.Linear(100, 1)
 
 		# self.fc1 = nn.Linear(self.feature_space, self.hidden_space)     # HIDDEN_SPACE = 64
@@ -316,10 +321,12 @@ class ConvIRL(nn.Module):
 		print(out.shape)
 		out = self.layer3(out)
 		print(out.shape)
+		out = self.layer4(out)
+		print(out.shape)
 		out = out.reshape(out.size(0), -1)
 		print(out.shape)
-		out = self.drop_out(out)
-		print(out.shape)
+		# out = self.drop_out(out)
+		# print(out.shape)
 		out = self.fc1(out)
 		out = self.fc2(out)
 		# out = self.fc3(out)
@@ -365,8 +372,16 @@ def deep_maxent_irl(feature_matrix, env, gamma, trajs, n_iters, lr):
 	feature_matrix_copy = feature_matrix
 	
 	feature_matrix = torch.tensor(feature_matrix, dtype = torch.float).to(device)
+
+	gamma = 0.95 # decaying factor
+	scheduler = StepLR(nn_r.optimiser, step_size=1, gamma=gamma)
 	
 	for iteration in range(n_iters):
+
+		# Decay Learning Rate
+		scheduler.step()
+		# Print Learning Rate
+		print('Epoch:', iteration,'LR:', scheduler.get_lr())
 	 
 		rewards = nn_r.forward(feature_matrix).squeeze()
 		print("rewards: ", rewards)
@@ -403,7 +418,8 @@ def deep_maxent_irl(feature_matrix, env, gamma, trajs, n_iters, lr):
 		flat_rewards.backward(grad)
 	 	
 		# rewards.backward(grad_r)
-		grad_norm = torch.nn.utils.clip_grad_norm_(nn_r.params, 10)
+		# grad_norm = torch.nn.utils.clip_grad_norm_(nn_r.params, 10)
+		torch.nn.utils.clip_grad_norm_(nn_r.parameters(), 0.5)
 		nn_r.optimiser.step()
 
 	rewards = nn_r.forward(feature_matrix).squeeze()  #get_rewards(feat_map)
