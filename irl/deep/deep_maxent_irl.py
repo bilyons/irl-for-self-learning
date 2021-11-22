@@ -21,6 +21,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 import torchvision.transforms as T
 from torch.optim import RMSprop
+from torch.optim import Adam
 
 from irl.standard.irl_set_traj_length import compute_state_visitation_frequency
 
@@ -107,7 +108,7 @@ class DeepMEIRL(nn.Module):
 
 	"""
 
-	def __init__(self, feature_space, hidden_space, lr=0.01):
+	def __init__(self, feature_space, hidden_space, lr=0.001):
 
 		super(DeepMEIRL, self).__init__()
 
@@ -123,7 +124,10 @@ class DeepMEIRL(nn.Module):
 		self.params = list(self.parameters())
 		optim_alpha = 0.99 # RMSProp alpha
 		optim_eps = 0.00001 # RMSProp epsilon
-		self.optimiser = RMSprop(params=self.params, lr=lr, alpha=optim_alpha, eps=optim_eps)
+		# self.optimiser = RMSprop(params=self.params, lr=lr, alpha=optim_alpha, eps=optim_eps)
+		epsilon=1e-8
+		self.optimiser = Adam(params=self.params, lr=lr, betas=(0.9, 0.999), eps=epsilon)
+		# Good default settings : learning_rate=0.001, beta1=0.9, beta2=0.999, epsilon=1e-8
 
 	def forward(self, x):
 
