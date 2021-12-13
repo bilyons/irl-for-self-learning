@@ -133,7 +133,7 @@ visualize_samples(state_samples, discretized_state_samples, state_grid,
 plt.xlabel('position'); plt.ylabel('velocity');  # axis labels for MountainCar-v0 state space
 
 
-def run(agent, env, num_episodes=2000, mode='train'):
+def run(agent, env, num_episodes=500000, mode='train'):
     """Run agent in given reinforcement learning environment and return scores."""
     scores = []
     max_avg_score = -np.inf
