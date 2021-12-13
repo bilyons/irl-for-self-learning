@@ -133,7 +133,7 @@ visualize_samples(state_samples, discretized_state_samples, state_grid,
 plt.xlabel('position'); plt.ylabel('velocity');  # axis labels for MountainCar-v0 state space
 
 
-def run(agent, env, num_episodes=20000, mode='train'):
+def run(agent, env, num_episodes=2000, mode='train'):
     """Run agent in given reinforcement learning environment and return scores."""
     scores = []
     max_avg_score = -np.inf
@@ -169,13 +169,16 @@ def run(agent, env, num_episodes=20000, mode='train'):
 q_agent = QLearningAgent(env, state_grid)
 scores = run(q_agent, env)
 
+plt.figure()
 # Plot scores obtained per episode
 plt.plot(scores); plt.title("Scores");
-plt.save("raw_score.png")
+plt.savefig("raw_score.png")
 
 # If the scores are noisy, plot a rolling mean of the scores.
 def plot_scores(scores, rolling_window=100, figname = "default.png"):
     """Plot scores and optional rolling mean using specified window."""
+    
+    plt.figure()
     plt.plot(scores); plt.title("Scores");
     rolling_mean = pd.Series(scores).rolling(rolling_window).mean()
     plt.plot(rolling_mean);
