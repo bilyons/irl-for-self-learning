@@ -1,104 +1,112 @@
 import gym
 import numpy as np
+import pandas as pd
+from scipy.special import softmax
 
-# plt.style.use('ggplot')
-# np.set_printoptions(precision=3, linewidth=120)
+# You don't need quite so much of what you have above, I will try to explain here
+# First, you don't need to make the env again, you can pass it from the main file
+def QLearning(env, lr, discount, epsilon, min_eps, episodes, stochastic=False, tau=None):
+	"""Define a simple Q learning agent for a discretised environment. - BL
+	
+	Parameters
+	----------
+	env       : environment, OpenAI Gym
+	lr        : learning rate of Q Learning
+	discount  : discount factor
+	epsilon   : initial exploration rate
+	min_eps   : lowest possible exploration rate
+	episodes  : number of episodes to train on
+	stochastic: if stochastic, boltzmann dist, if false, epsilon greedy
+	tau       : temperature of boltzmann
 
-# Create an environment and set random seed
-env = gym.make('MountainCar-v0')
-env.seed(505)
+	Returns
+	-------
+	A list of the average rewards as a rolling window of 100
+	"""	
 
-def discretize(sample, grid):
-    """Discretize a sample as per given grid.
-    
-    Parameters
-    ----------
-    sample : array_like
-        A single sample from the (original) continuous space.
-    grid : list of array_like
-        A list of arrays containing split points for each dimension.
-    
-    Returns
-    -------
-    discretized_sample : array_like
-        A sequence of integers with the same number of dimensions as sample.
-    """
-    # TODO: Implement this
-    x = np.digitize(np.array([sample[0]]), grid[0], right=False)
-    y = np.digitize(np.array([sample[1]]), grid[1], right=False)
-    return [x[0], y[0]]
+	# For Jerry:
+	# There are a lot of built in features of the open ai gym environment which means
+	# you don't have to do as much work with the discretisation code.
+	n_states = (env.observation_space.high-env.observation_space.low)*\
+					np.array([10,100]) # by changing these we can change the granularity
+	n_states = np.round(n_states, 0).astype(int) + 1
 
+	Q = np.random.uniform(low=-1, high=1,
+		size = (n_states[0], n_states[1], env.action_space.n))
 
-class QLearningAgent:
-    """Q-Learning agent that can act on a continuous state space by discretizing it."""
+	if stochastic == True and tau == None:
+		print("Must have value for tau if stochastic policy used")
+		exit()
 
-    def __init__(self, env, state_grid, alpha=0.02, gamma=0.99,
-                 epsilon=1.0, epsilon_decay_rate=0.9995, min_epsilon=.01, seed=505):
-        """Initialize variables, create grid for discretization."""
-        # Environment info
-        self.env = env
-        self.state_grid = state_grid
-        self.state_size = tuple(len(splits) + 1 for splits in self.state_grid)  # n-dimensional state space
-        self.action_size = self.env.action_space.n  # 1-dimensional discrete action space
-        self.seed = np.random.seed(seed)
-        print("Environment:", self.env)
-        print("State space size:", self.state_size)
-        print("Action space size:", self.action_size)
-        
-        # Learning parameters
-        self.alpha = alpha  # learning rate
-        self.gamma = gamma  # discount factor
-        self.epsilon = self.initial_epsilon = epsilon  # initial exploration rate
-        self.epsilon_decay_rate = epsilon_decay_rate # how quickly should we decrease epsilon
-        self.min_epsilon = min_epsilon
-        
-        # Create Q-table
-        self.q_table = np.zeros(shape=(self.state_size + (self.action_size,)))
-        print("Q table size:", self.q_table.shape)
+	def action_selection(state, epsilon, stochastic, tau):
+		# Determine action
+		if np.random.rand() < epsilon:
+			action = env.action_space.sample()
+		else:
+			if stochastic:
+				prob = softmax(Q[state[0], state[1],:]/tau)
+				action = np.random.choice(env.action_space.n, p=prob)
+			else:
+				action = np.argmax(Q[state[0], state[1], :])
+		return action		
 
-    def preprocess_state(self, state):
-        """Map a continuous state to its discretized representation."""
-        # TODO: Implement this
-        return tuple(discretize(state, self.state_grid))
+	# Reward tracking 
+	rewards = []
+	avg_rewards = []
 
-    def reset_episode(self, state):
-        """Reset variables for a new episode."""
-        # Gradually decrease exploration rate
-        self.epsilon *= self.epsilon_decay_rate
-        self.epsilon = max(self.epsilon, self.min_epsilon)
+	# Linear reduction in epsilon (you might want to change this)
+	delta_eps = (epsilon-min_eps)/episodes
 
-        # Decide initial action
-        self.last_state = self.preprocess_state(state)
-        self.last_action = np.argmax(self.q_table[self.last_state])
-        return self.last_action
-    
-    def reset_exploration(self, epsilon=None):
-        """Reset exploration rate used when training."""
-        self.epsilon = epsilon if epsilon is not None else self.initial_epsilon
+	for i in range(episodes):
 
-    def act(self, state, reward=None, done=None, mode='train'):
-        """Pick next action and update internal Q table (when mode != 'test')."""
-        state = self.preprocess_state(state)
-        if mode == 'test':
-            # Test mode: Simply produce an action
-            action = np.argmax(self.q_table[state])
-        else:
-            # Train mode (default): Update Q table, pick next action
-            # Note: We update the Q table entry for the *last* (state, action) pair with current state, reward
-            self.q_table[self.last_state + (self.last_action,)] += self.alpha * \
-                (reward + self.gamma * max(self.q_table[state]) - self.q_table[self.last_state + (self.last_action,)])
+		# Initialising params
+		done = False
+		episode_reward, reward = 0,0
+		state = env.reset() # Non discretised
 
-            # Exploration vs. exploitation
-            do_exploration = np.random.uniform(0, 1) < self.epsilon
-            if do_exploration:
-                # Pick a random action
-                action = np.random.randint(0, self.action_size)
-            else:
-                # Pick the best action from Q table
-                action = np.argmax(self.q_table[state])
+		# Discretise the state
+		# We do this as above then it is really simple to follow it through
+		d_state = (state-env.observation_space.low)*\
+					np.array([10,100])
+		d_state = np.round(d_state, 0).astype(int)
 
-        # Roll over current state, action for next step
-        self.last_state = state
-        self.last_action = action
-        return action
+		while not done:
+			# Render environment for last five episodes
+			if i >= (episodes - 20):
+				env.render()
+			action = action_selection(d_state, epsilon, stochastic, tau)
 
+			# Get new state
+			new_state, reward, done, _ = env.step(action)
+
+			# Discretise new state
+			d_new_state = (new_state-env.observation_space.low)*\
+					np.array([10,100])
+			d_new_state = np.round(d_new_state, 0).astype(int)
+
+			if done and new_state[0]>=0.5:
+				Q[d_state[0], d_state[1], action] = reward # Updating terminal Q value
+			else:
+				# Gotta learn
+				delta = lr*(reward + discount*np.max(Q[d_new_state[0], d_new_state[1],:]-
+														Q[d_state[0], d_state[1], action]))
+				Q[d_state[0], d_state[1], action] += delta
+			episode_reward += reward
+
+			d_state = d_new_state # Becomes new start state
+
+		if epsilon > min_eps:
+			epsilon -= delta_eps
+
+		rewards.append(episode_reward)
+
+		if i%100==0:
+			print(i)
+
+	reward_series = pd.Series(rewards)
+	windows = reward_series.rolling(100)
+	moving_averages = windows.mean()
+	moving_averages_list = moving_averages.tolist()
+	without_nans = moving_averages_list[100-1:]
+
+	return rewards, without_nans
