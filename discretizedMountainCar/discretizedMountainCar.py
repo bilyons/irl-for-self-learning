@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from RLlearner import QLearningAgent
+from RLlearner import QLearning as QLearningAgent
 
 plt.style.use('ggplot')
 np.set_printoptions(precision=3, linewidth=120)
@@ -133,7 +133,7 @@ visualize_samples(state_samples, discretized_state_samples, state_grid,
 plt.xlabel('position'); plt.ylabel('velocity');  # axis labels for MountainCar-v0 state space
 
 
-def run(agent, env, num_episodes=500000, mode='train'):
+def run(agent, env, num_episodes=10000, mode='train'):
     """Run agent in given reinforcement learning environment and return scores."""
     scores = []
     max_avg_score = -np.inf
@@ -167,6 +167,7 @@ def run(agent, env, num_episodes=500000, mode='train'):
     return scores
 
 q_agent = QLearningAgent(env, state_grid)
+# raws, rolling_mean = QLearning(env, 0.1, 0.9, 0.9, 0.1, 5000)
 scores = run(q_agent, env)
 
 plt.figure()
