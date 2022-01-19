@@ -20,7 +20,7 @@ GridWorld(5*5)
 
 
 <!-- * **Deep Maxent IRL on ObjectWorld**
-  
+
     With 100 iterations.
 
   ![Deep Maxent IRL](pics/reward-ObjectWorld.png)
@@ -39,7 +39,7 @@ GridWorld(5*5)
   
 		Trail 3: Best result so far with more trajectory samples and length:
     After 200 episodes, with the following config: loss becomes 3.17.
-    
+  
     Configs:
 
     ```
@@ -58,6 +58,11 @@ GridWorld(5*5)
   ![Deep Maxent IRL 1](pics/Figure_1.png)
 
     Trail 5:
-  
+
   ![Deep Maxent IRL 2](pics/Figure_2.png)
-  
+
+#### Add root python dir to PYTHONPATH:
+
+
+
+```export PYTHONPATH=$PYTHONPATH:/home/jerry/Billy/irl-for-self-learning```
