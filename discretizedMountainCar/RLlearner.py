@@ -72,8 +72,8 @@ def QLearning(env, lr, discount, epsilon, min_eps, episodes, stochastic=False, t
 
 		while not done:
 			# Render environment for last five episodes
-			if i >= (episodes - 20):
-				env.render()
+			# if i >= (episodes - 20):
+			# 	env.render()
 			action = action_selection(d_state, epsilon, stochastic, tau)
 
 			# Get new state
@@ -109,4 +109,6 @@ def QLearning(env, lr, discount, epsilon, min_eps, episodes, stochastic=False, t
 	moving_averages_list = moving_averages.tolist()
 	without_nans = moving_averages_list[100-1:]
 
-	return rewards, without_nans
+	return rewards, without_nans, Q
+
+# Q[d_state[0], d_state[1], action]
